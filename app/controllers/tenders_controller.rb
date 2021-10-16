@@ -7,37 +7,44 @@ class TendersController < ApplicationController
     # added rescue_from
     rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
 
-    # GET /tenders
+    # GET /bids/:bid_id/tenders
     def index
       if params[:bid_id]
         bid = Bid.find(params[:bid_id])
-        tenders = bid.tenders
+        tenders = bid.tenders.all.sort {|a,b| b.price <=> a.price}
       else
-        tenders = Tender.all
+        tenders = Tender.all.sort {|a,b| b.price <=> a.price}
       end
-      render json: tenders, include: :bid
+      render json: tenders, include: [:bid, :user]
     end
   
-    # GET /tenders/:id
+    # GET /bids/:bid_id/tenders/:id
     def show
       tender = find_tender
-      render json: tender, include: :bid
+      render json: tender, include: [:bid, :user]
     end
   
-    # POST /tenders
+    # POST /bids/:bid_id/tenders
     def create
-      tender = Tender.create!(tender_params)
-      render json: tender, status: :created
+      tender = Tender.new(tender_params)
+      tender.bid_id = params[:bid_id]
+      tender.user_id = session[:user_id]
+      if tender.valid?
+        tender.save
+        render json: tender, status: :created
+      else
+        render json: { errors: tender.errors.full_messages }, status: :unprocessable_entity
+      end
     end
   
-    # PATCH /tenders/:id
+    # PATCH /bids/:bid_id/tenders/:id
     def update
         tender = find_tender
         tender.update!(tender_params)
         render json: tender
     end
     
-    # DELETE /tenders/:id
+    # DELETE /bids/:bid_id/tenders/:id
     def destroy
         tender = find_tender
         tender.destroy

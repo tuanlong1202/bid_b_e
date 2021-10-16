@@ -11,6 +11,20 @@ class MessagesController < ApplicationController
       messages = Message.all
       render json: messages
     end
+
+    # GET /inbox
+    def inbox
+      messages = Message.all.select { |m| m.receiver == session[:user_id] }
+      messages.sort {|a,b| b.created_at <=> a.created_at}
+      render json: messages
+    end
+
+    # GET /outbox
+    def outbox
+      messages = Message.all.select { |m| m.sender == session[:user_id] }
+      messages.sort {|a,b| b.created_at <=> a.created_at}
+      render json: messages
+    end
   
     # GET /messages/:id
     def show

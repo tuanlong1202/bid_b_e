@@ -28,7 +28,7 @@ class BidsController < ApplicationController
     # GET /bids/:id
     def show
       bid = find_bid
-      render json: bid, include: :tenders
+      render json: bid, include: [:tenders, :user]
     end
   
     # PATCH /bids/:id
